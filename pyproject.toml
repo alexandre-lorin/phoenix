@@ -1,7 +1,7 @@
 [project]
 name = "phoenix"
 version = "0.7.0"
-description = "Clonage complet de config Arch, versionné dans Git."
+description = "Git-backed Arch Linux configuration snapshots and restore tooling."
 requires-python = ">=3.11"
 
 [project.optional-dependencies]

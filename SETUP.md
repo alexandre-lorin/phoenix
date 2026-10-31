@@ -1,15 +1,15 @@
-# Guide de setup — Phoenix
+# Setup guide — Phoenix
 
-De zéro à `phoenix snapshot` qui tourne. Suis l'ordre, ne saute pas d'étape.
+From zero to `phoenix snapshot` running. Follow the order, don't skip steps.
 
 ---
 
-## 0. Prérequis
+## 0. Prerequisites
 
-- Arch Linux (ou dérivé pacman-based). Non testé sur autre chose, n'essaie pas.
-- Python 3.11+ (`python --version` — sur Arch à jour c'est déjà le cas).
-- `git` installé (`pacman -S git` si absent).
-- Un AUR helper (`yay` ou `paru`) — optionnel, à installer séparément. Sans helper, `restore` signale les paquets AUR ignorés ; il n'en installe plus automatiquement.
+- Arch Linux (or pacman-based derivative). Not tested on anything else, don't try.
+- Python 3.11+ (`python --version` — on up-to-date Arch this is already the case).
+- `git` installed (`pacman -S git` if absent).
+- An AUR helper (`yay` or `paru`) — optional, to be installed separately. Without a helper, `restore` reports ignored AUR packets; it no longer installs them automatically.
 
 ---
 
@@ -21,15 +21,15 @@ cd phoenix-tool
 pip install --user -e ".[dev]"
 ```
 
-Le `[dev]` installe aussi `pytest` — utile pour l'étape 3.
+`[dev]` also installs `pytest` — useful for step 3.
 
-Vérifie que la commande est accessible :
+Check that the command is accessible:
 
 ```bash
 phoenix --help
 ```
 
-Si `command not found` : `~/.local/bin` n'est probablement pas dans ton `$PATH`. Ajoute dans ton `~/.bashrc`/`~/.zshrc`/`~/.config/fish/config.fish` :
+If `command not found`: `~/.local/bin` is probably not in your `$PATH`. Add in your `~/.bashrc`/`~/.zshrc`/`~/.config/fish/config.fish`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -37,24 +37,24 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ---
 
-## 2. Premier lancement
+## 2. First launch
 
 ```bash
 phoenix snapshot
 ```
 
-Ce premier run va :
-1. Créer `~/phoenix-config/` (le repo Git qui contient tout).
-2. Y déposer un `phoenix.toml` avec des chemins de dotfiles **par défaut, devinés** (Hyprland, Waybar, Alacritty, fish, kitty, rofi, wlogout, gitconfig).
-3. Capturer ces chemins et créer un commit. Il ne s'arrête pas après la création de la configuration. Préparer et relire `phoenix.toml` avant d'exécuter ce premier snapshot, notamment pour exclure les secrets et adapter les chemins à la machine.
+This first run will:
+1. Create `~/phoenix-config/` (the Git repo that contains everything).
+2. Drop a `phoenix.toml` with dotfile paths **by default, guessed** (Hyprland, Waybar, Alacritty, fish, kitty, rofi, wlogout, gitconfig).
+3. Capture these paths and create a commit. It does not stop after creating the configuration. Prepare and reread `phoenix.toml` before running this first snapshot, in particular to exclude secrets and adapt the paths to the machine.
 
-**Étape obligatoire avant de faire confiance au résultat :**
+**Mandatory step before trusting the result:**
 
 ```bash
 $EDITOR ~/phoenix-config/phoenix.toml
 ```
 
-Édite la liste `paths` sous `[dotfiles]` pour qu'elle corresponde à ta vraie structure. Exemple si tu utilises GNU Stow avec un dossier `~/dotfiles/` :
+Edit the list `paths` under `[dotfiles]` to match your real structure. Example if you use GNU Stow with a folder `~/dotfiles/`:
 
 ```toml
 [dotfiles]
@@ -65,51 +65,51 @@ paths = [
 ]
 ```
 
-Relance ensuite :
+Then restart:
 
 ```bash
 phoenix snapshot
 ```
 
-Et vérifie ce qui a été capturé :
+And check what was captured:
 
 ```bash
 cat ~/phoenix-config/packages/pacman.txt | wc -l   # doit être proche du nombre de paquets réels
 cat ~/phoenix-config/dotfiles/manifest.json         # doit lister tes vrais chemins
 ```
 
-Si `packages/pacman.txt` est vide ou absurdement court, ou si `manifest.json` a des chemins qui n'existent pas chez toi, **ne va pas plus loin** — dis-moi l'erreur exacte.
+If `packages/pacman.txt` is empty or absurdly short, or if `manifest.json` has paths that don't exist for you, **don't go any further** — tell me the exact error.
 
 ---
 
-## 3. Valider avec les tests
+## 3. Validate with tests
 
-Avant de faire confiance à `restore` ou `rollback` sur du réel, fais tourner la suite de tests — elle ne touche jamais ton vrai système, tout est en environnement isolé (`tmp_path` pytest) :
+Before trusting `restore` or `rollback` in real life, run the test suite — it never touches your real system, everything is in an isolated environment (`tmp_path` pytest):
 
 ```bash
 cd phoenix-tool
 pytest tests/ -v
 ```
 
-37 tests. S'ils ne passent pas tous, quelque chose a cassé entre ce que je t'ai livré et ton environnement (version Python, etc.) — corrige avant de continuer, pas après.
+37 tests. If they don't all pass, something is broken between what I delivered to you and your environment (Python version, etc.) — correct it before continuing, not after.
 
 ---
 
-## 4. Vérifier que le système est aligné
+## 4. Check that the system is aligned
 
 ```bash
 phoenix status
 ```
 
-Doit dire `✓ Système aligné avec le dernier snapshot.` juste après un `snapshot`. Si ça affiche une divergence à ce stade, y'a un bug — pas censé arriver juste après capture.
+Should say `✓ Système aligné avec le dernier snapshot.` right after a `snapshot`. If it shows a discrepancy at this point, there's a bug — not supposed to happen right after capture.
 
 ---
 
-## 5. Tester `restore` — JAMAIS en direct sur ta machine principale
+## 5. Test `restore` — NEVER live on your main machine
 
-`restore` réinstalle des paquets et écrase des dotfiles. Tu ne testes pas ça à l'aveugle sur le système que tu utilises tous les jours.
+`restore` reinstalls packages and overwrites dotfiles. You don't blind test this on the system you use every day.
 
-**Option recommandée : VM Arch.**
+**Recommended option: VM Arch.**
 
 ```bash
 # Dans la VM, après avoir cloné/copié ton repo phoenix-config :
@@ -117,32 +117,32 @@ export PHOENIX_REPO=/chemin/vers/phoenix-config
 phoenix restore --skip-aur   # d'abord sans AUR, pour limiter la casse potentielle
 ```
 
-Regarde ce qui se passe à chaque étape (confirmations activées, pas de `--yes` pour ce premier test). Si tout se passe bien :
+See what happens at each step (confirmations enabled, no `--yes` for this first test). If all goes well:
 
 ```bash
 phoenix restore   # avec AUR cette fois
 ```
 
-**Seulement après un restore propre en VM**, tu peux envisager `phoenix restore` sur une machine réelle fraîchement installée (le cas d'usage réel : reinstall, nouveau PC, casse système).
+**Only after a clean VM restore**, you can consider `phoenix restore` on a real, freshly installed machine (the real use case: reinstall, new PC, system crash).
 
 ---
 
-## 6. Workflow quotidien
+## 6. Daily workflow
 
-Une fois que 1 à 5 sont validés :
+Once 1 to 5 are committed:
 
 ```bash
 phoenix snapshot     # après chaque modif de config que tu veux garder
 phoenix status        # pour vérifier avant un restore ou juste par prudence
 ```
 
-Idée : un cron/systemd timer qui lance `phoenix snapshot` automatiquement (ex: chaque soir). Pas fourni par défaut — à toi de le brancher si tu veux, avec un `systemd --user timer` qui appelle `phoenix snapshot`.
+Idea: a cron/systemd timer which launches `phoenix snapshot` automatically (eg: every evening). Not provided by default — it's up to you to plug it in if you want, with a `systemd --user timer` which calls `phoenix snapshot`.
 
 ---
 
-## 7. Cas d'usage avancés
+## 7. Advanced use cases
 
-### Rollback — revenir à un état antérieur du repo
+### Rollback — revert to a previous state of the repo
 
 ```bash
 phoenix rollback                # liste les 15 derniers snapshots
@@ -150,9 +150,9 @@ phoenix rollback <hash>         # ramène le REPO à cet état (le système live
 phoenix restore                 # applique cet état au système, si tu veux vraiment revenir en arrière
 ```
 
-### Diff entre deux machines
+### Diff between two machines
 
-Utile quand tu as un deuxième poste. Récupère le repo de l'autre machine (clone Git, clé USB, peu importe) :
+Useful when you have a second job. Get the repo from the other machine (Git clone, USB key, whatever):
 
 ```bash
 phoenix diff /chemin/vers/repo-de-lautre-machine
@@ -160,18 +160,18 @@ phoenix diff /chemin/vers/repo-de-lautre-machine
 
 ---
 
-## Pièges connus (lis ça avant de râler que ça marche pas)
+## Known pitfalls (read this before complaining that it doesn’t work)
 
-| Symptôme | Cause probable |
+| Symptom | Probable cause |
 |---|---|
-| `phoenix: command not found` | `~/.local/bin` pas dans `$PATH` — voir étape 1 |
-| `manifest.json` vide ou chemins faux | `phoenix.toml` jamais édité après le premier run — voir étape 2 |
-| `restore` plante sur les paquets AUR | Aucun `yay`/`paru`, bootstrap refusé ou échoué — relance avec `--skip-aur` puis installe un helper manuellement |
-| `phoenix status` montre une divergence juste après un snapshot | Bug potentiel — remonte-le avec le message exact, pas juste "ça marche pas" |
-| Dotfiles avec des secrets (clés SSH, tokens) commités dans le repo | Non géré automatiquement — vérifie `~/phoenix-config/dotfiles/` avant tout push sur un remote, surtout public |
+| `phoenix: command not found` | `~/.local/bin` not in `$PATH` — see step 1 |
+| `manifest.json` empty or wrong paths | `phoenix.toml` never edited after first run — see step 2 |
+| `restore` crashes on AUR packets | None `yay`/`paru`, bootstrap refused or failed — restart with `--skip-aur` then install a helper manually |
+| `phoenix status` shows divergence right after snapshot | Potential bug — report it with the exact message, not just "it doesn't work" |
+| Dotfiles with secrets (SSH keys, tokens) committed to the repo | Not managed automatically — checks `~/phoenix-config/dotfiles/` before any push to a remote, especially public |
 
 ---
 
-## Sécurité — dernier rappel avant de push sur GitHub
+## Security — last reminder before pushing to GitHub
 
-Phoenix ne détecte **pas** les secrets automatiquement au-delà des patterns génériques (`*cache*`, `*.log`, etc. dans `phoenix.toml`). Si tes dotfiles contiennent des clés API, tokens, ou configs SSH en clair, **vérifie manuellement `~/phoenix-config/dotfiles/` avant de pousser sur un remote public.** Un `git log -p` rapide ou un `grep -riE "token|key|secret|password" ~/phoenix-config/dotfiles/` avant le premier push, c'est deux minutes contre une fuite.
+Phoenix does **not** detect secrets automatically beyond generic patterns (`*cache*`, `*.log`, etc. in `phoenix.toml`). If your dotfiles contain clear API keys, tokens, or SSH configs, **manually check `~/phoenix-config/dotfiles/` before pushing to a public remote.** A quick `git log -p` or `grep -riE "token|key|secret|password" ~/phoenix-config/dotfiles/` before the first push is two minutes against a leak.
